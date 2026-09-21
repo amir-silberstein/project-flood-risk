@@ -22,7 +22,6 @@ class SpatialData:
     average_elevation: np.ndarray
     land_use: np.ndarray
     inhabitants: np.ndarray | None = None
-    cell_size_m: float = 100.0
 
     def __post_init__(self) -> None:
         arrays = (
@@ -35,8 +34,6 @@ class SpatialData:
             arrays += (self.inhabitants,)
         if any(array.shape != self.dike_ring.shape for array in arrays):
             raise ValueError("All spatial rasters must have the same shape")
-        if self.cell_size_m <= 0:
-            raise ValueError("cell_size_m must be positive")
 
 
 @dataclass(frozen=True)
@@ -48,7 +45,11 @@ class AreaMap:
     neighbors: Mapping[int, frozenset[int]]
     maximum_elevation: np.ndarray
     average_elevation: np.ndarray
-    cell_size_m: float
+
+    @property
+    def compartments(self) -> Mapping[int, tuple[tuple[int, int], ...]]:
+        """Return compartment cells using the concise ``compartments[id]`` API."""
+        return self.cell_coordinates
 
 
 def _read_raster(path: Path) -> np.ndarray:
@@ -73,35 +74,28 @@ def load_spatial_data(data_directory: str | Path = DEFAULT_DATA_DIRECTORY) -> Sp
     )
 
 
-def _existing_compartments(dike_ring: np.ndarray) -> np.ndarray:
-    """Apply the six compartment rules already used by the spatial script."""
-    rows, columns = dike_ring.shape
-    y_indices, x_indices = np.indices(dike_ring.shape)
-    compartments = np.zeros(dike_ring.shape, dtype=int)
-    valid = np.isfinite(dike_ring)
-
-    ring_43 = valid & (dike_ring == 43)
-    compartments[ring_43 & (y_indices > rows * (800 - x_indices) / 100)] = 1
-    ring_43_remaining = ring_43 & (compartments == 0)
-    compartments[
-        ring_43_remaining & (y_indices > rows * (x_indices - 400) / 150)
-    ] = 2
-    compartments[ring_43 & (compartments == 0)] = 3
-
-    ring_16 = valid & (dike_ring == 16)
-    compartments[ring_16 & (x_indices > 150) & (y_indices > 100)] = 4
-    compartments[ring_16 & (x_indices > 150) & (y_indices <= 100)] = 5
-    compartments[ring_16 & (x_indices <= 150)] = 6
-
-    return compartments
-
-
 def _area_labels(dike_ring: np.ndarray) -> np.ndarray:
-    """Use existing compartments, or finite raster labels for artificial inputs."""
+    """Derive six compartment labels from the existing dike-ring geometry."""
     finite_values = dike_ring[np.isfinite(dike_ring)]
     if finite_values.size and set(np.unique(finite_values)).issubset({16.0, 43.0}):
-        return _existing_compartments(dike_ring)
+        rows, columns = dike_ring.shape
+        y_indices, x_indices = np.indices(dike_ring.shape)
+        labels = np.zeros(dike_ring.shape, dtype=int)
+        valid = np.isfinite(dike_ring)
 
+        ring_43 = valid & (dike_ring == 43)
+        labels[ring_43 & (y_indices > rows * (800 - x_indices) / 100)] = 1
+        ring_43_remaining = ring_43 & (labels == 0)
+        labels[ring_43_remaining & (y_indices > rows * (x_indices - 400) / 150)] = 3
+        labels[ring_43 & (labels == 0)] = 2
+
+        ring_16 = valid & (dike_ring == 16)
+        labels[ring_16 & (x_indices > 150) & (y_indices > 100)] = 4
+        labels[ring_16 & (x_indices > 150) & (y_indices <= 100)] = 5
+        labels[ring_16 & (x_indices <= 150)] = 6
+        return labels
+
+    # Small synthetic grids may already provide compartment IDs directly.
     labels = np.zeros(dike_ring.shape, dtype=int)
     labels[np.isfinite(dike_ring)] = np.rint(dike_ring[np.isfinite(dike_ring)]).astype(int)
     return labels
@@ -134,5 +128,4 @@ def create_area_map(spatial_data: SpatialData) -> AreaMap:
         neighbors=_area_neighbors(area_ids),
         maximum_elevation=spatial_data.maximum_elevation,
         average_elevation=spatial_data.average_elevation,
-        cell_size_m=spatial_data.cell_size_m,
     )
