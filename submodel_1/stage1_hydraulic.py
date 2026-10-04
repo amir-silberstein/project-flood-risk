@@ -1,4 +1,4 @@
-"""Functional hydraulic calculations for stage 1 of the flood-risk model."""
+"""Shared hydraulic calculations for the stage-1 flood-risk model."""
 
 from dataclasses import dataclass
 from typing import Sequence
@@ -10,8 +10,10 @@ from scipy.optimize import fsolve
 class HydraulicParameters:
     """Physical and hydraulic inputs for one dike location."""
 
+    river_bed_nap: float
+    floodplain_bed_nap: float
+    crest_height_nap: float
     main_channel_height: float
-    dike_height: float
     discharge_fraction: float
     river_slope: float
     manning_main_channel: float
@@ -19,11 +21,16 @@ class HydraulicParameters:
     main_channel_width: float
     total_channel_width: float
 
+    @property
+    def dike_height(self) -> float:
+        """Height of the dike above the floodplain."""
+        return self.crest_height_nap - self.floodplain_bed_nap
+
 
 def calculate_water_level(
     discharge_lobith: float,
     parameters: HydraulicParameters,
-) -> tuple[float, bool]:
+) -> tuple[float, float, bool]:
     """Calculate water level and overtopping status for a Lobith discharge."""
     discharge = discharge_lobith * parameters.discharge_fraction
     main_channel_height = parameters.main_channel_height
@@ -67,10 +74,10 @@ def calculate_water_level(
         water_level = fsolve(discharge_difference, water_level_guess)[0]
 
     water_level = round(float(water_level), 2)
-    dike_crest_height = main_channel_height + parameters.dike_height
-    overtopping = water_level > dike_crest_height
+    water_level_nap = round(water_level + parameters.river_bed_nap, 2)
+    overtopping = water_level_nap > parameters.crest_height_nap
 
-    return water_level, overtopping
+    return water_level, water_level_nap, overtopping
 
 
 def calculate_water_level_series(
@@ -80,13 +87,13 @@ def calculate_water_level_series(
 ) -> dict[str, list[float] | float]:
     """Calculate central water levels and optional lower and upper estimates."""
     water_levels = [
-        calculate_water_level(discharge, parameters)[0]
+        calculate_water_level(discharge, parameters)[1]
         for discharge in discharges_lobith
     ]
 
     result: dict[str, list[float] | float] = {
         "water_levels": water_levels,
-        "crest_height": parameters.main_channel_height + parameters.dike_height,
+        "crest_height": parameters.crest_height_nap,
     }
 
     if uncertainty_bands is not None:
@@ -94,10 +101,10 @@ def calculate_water_level_series(
         upper_levels = []
         for discharge, band in zip(discharges_lobith, uncertainty_bands):
             lower_levels.append(
-                calculate_water_level(discharge - band / 2, parameters)[0]
+                calculate_water_level(discharge - band / 2, parameters)[1]
             )
             upper_levels.append(
-                calculate_water_level(discharge + band / 2, parameters)[0]
+                calculate_water_level(discharge + band / 2, parameters)[1]
             )
 
         result["lower_levels"] = lower_levels

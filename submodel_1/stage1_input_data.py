@@ -1,11 +1,13 @@
 """Input data for the stage-1 hydraulic model."""
 
-from stage1_hydraulic import HydraulicParameters
+from submodel_1.stage1_hydraulic import HydraulicParameters
 
 
 DIKE_16_PARAMETERS = HydraulicParameters(
+    river_bed_nap=-3.8,
+    floodplain_bed_nap=2.45,
+    crest_height_nap=7.88,
     main_channel_height=6.25,
-    dike_height=5.48,
     discharge_fraction=2 / 9,
     river_slope=0.00011,
     manning_main_channel=0.03,
@@ -15,8 +17,10 @@ DIKE_16_PARAMETERS = HydraulicParameters(
 )
 
 DIKE_43_PARAMETERS = HydraulicParameters(
+    river_bed_nap=2.55,
+    floodplain_bed_nap=9.75,
+    crest_height_nap=16.62,
     main_channel_height=7.2,
-    dike_height=6.79,
     discharge_fraction=2 / 3,
     river_slope=0.00016,
     manning_main_channel=0.03,
