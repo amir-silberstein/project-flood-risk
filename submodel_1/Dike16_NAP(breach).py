@@ -1,8 +1,8 @@
 """Dike 16 breach-model entry point."""
 
-from .Dike16_NAP import calculate_water_level
-from .breach import BreachParameters
-from .breach import simulate_breach as _simulate_breach
+from submodel_1.Dike16_NAP import calculate_water_level
+from submodel_1.breach import BreachParameters
+from submodel_1.breach import simulate_breach as _simulate_breach
 
 PARAMETERS = BreachParameters(
     floodplain_bed_nap=2.45,
