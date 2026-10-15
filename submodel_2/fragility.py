@@ -1,10 +1,5 @@
 """Combine conditional mechanisms at the SAME water level (m NAP).
 
-Independence follows the supplied course slide image(6).png. Overtopping is
-a deterministic still-water crest exceedance, matching stage1_hydraulic.py.
-It is an inundation trigger in this simple model, not proof of physical breach.
-"""
-
 import numpy as np
 
 from submodel_2.piping import calculate_piping_probability
