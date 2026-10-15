@@ -6,8 +6,6 @@ from submodel_2.piping_input_data import DIKE_16_PARAMETERS, DIKE_43_PARAMETERS
 
 PARAMETERS = {16: DIKE_16_PARAMETERS, 43: DIKE_43_PARAMETERS}
 
-# Source: hydraulic scenario table supplied as image(4).png, 15 October 2026.
-# Keep this separate from the live hydraulic calculation: the levels differ.
 RETURN_PERIODS = np.array([12.5, 125, 1250, 12500, 125000])
 DISCHARGES = np.array([9738.657, 13634.48, 17474.07, 21308.24, 25141.87])  # m3/s
 SCENARIO_WEIGHTS = np.array([0.072, 0.0072, 0.00072, 0.000072, 0.000008])
@@ -16,8 +14,6 @@ SUBMITTED_LEVELS = {
     43: np.array([12.72, 14.32, 15.67, 16.90, 18.02]),
 }
 
-# Source: result_dike_stability.tex, coordinates used in submitted Figure 5.
-# These are reference-section results, NOT reruns for an improved dike.
 # Preserve the small decrease at 14.50 -> 14.70 m for ring 43 for review.
 MACRO_DATA = {
     16: np.array([
@@ -36,10 +32,6 @@ MACRO_DATA = {
     ]),
 }
 
-# Proposed screening changes, not measured geometry or approved designs.
-# A seepage berm/blanket would have to justify the effective L increase.
-# Keep hp, d and macro results fixed to isolate the effects in this model.
-# A physical redesign needs geometry, groundwater and D-Stability reruns.
 DESIGN_CHANGES = {
     "Baseline": (0.0, 0.0),
     "Crest +1 m": (1.0, 0.0),
