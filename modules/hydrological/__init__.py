@@ -1,11 +1,20 @@
-"""Hydrological model package."""
+"""Hydrological and dike-breach calculations.
 
-from .Dike16_water_level import calculate_water_level as calculate_dike16_water_level
-from .Dike43_water_level import calculate_water_level as calculate_dike43_water_level
-from .hydrological_model import create_hydrological_table
+The package exposes the model's public calculation functions at the package
+level so callers do not need to depend on the internal module layout.
+"""
+
+from dike_settings import DIKE16, DIKE43, DikeSettings
+
+from .breach import calculate_breach_discharge
+from .hydrological_table import create_hydrological_table
+from .water_level import calculate_water_level
 
 __all__ = [
-    "calculate_dike16_water_level",
-    "calculate_dike43_water_level",
+    "DIKE16",
+    "DIKE43",
+    "DikeSettings",
+    "calculate_breach_discharge",
+    "calculate_water_level",
     "create_hydrological_table",
 ]

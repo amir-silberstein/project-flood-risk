@@ -21,6 +21,7 @@ def create_hydrological_table(
 
     probabilities: list[float] = []
     discharges: list[float] = []
+    discharges_at_breach: list[float] = []
     return_periods: list[float] = []
     water_levels: list[float] = []
     breach_discharges: list[float] = []
@@ -30,8 +31,7 @@ def create_hydrological_table(
 
         if i < len(Q_thresholds) - 1:
             probability: float = (
-                EXCEEDANCE_PROBABILITIES[i]
-                - EXCEEDANCE_PROBABILITIES[i + 1]
+                EXCEEDANCE_PROBABILITIES[i] - EXCEEDANCE_PROBABILITIES[i + 1]
             )
         else:
             probability = EXCEEDANCE_PROBABILITIES[i]
@@ -48,16 +48,20 @@ def create_hydrological_table(
             dike,
         )
 
+        discharge_at_breach: float = discharge * dike.discharge_fraction
+
         probabilities.append(probability)
         discharges.append(discharge)
+        discharges_at_breach.append(discharge_at_breach)
         return_periods.append(return_period)
         water_levels.append(water_level)
         breach_discharges.append(breach_discharge)
 
     hydrological_data: dict[str, list[float]] = {
         "return period [years]": return_periods,
+        "input discharge [m^3/s]": discharges,
+        "discharge at breach location [m^3/s]": discharges_at_breach,
         "probability": probabilities,
-        "discharge [m^3/s]": discharges,
         "water level [m NAP]": water_levels,
         "breach discharge [m^3/s]": breach_discharges,
     }
