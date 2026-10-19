@@ -36,17 +36,12 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
-from pathlib import Path
-
-
-output_dir = Path(__file__).resolve().parent / 'python_output'
-output_dir.mkdir(exist_ok=True)
 
 
 """ Loading data """
 dikeringarea = pd.read_csv('Dikeringarea.txt',header=None, delimiter = ';').to_numpy()
 inhabitants = pd.read_csv('Inhabitants.txt',header=None, delimiter = ';').to_numpy()
-landuse = pd.read_csv('Landuse.txt',header=None, delimiter = ';').to_numpy()
+landuse = pd.read_csv('landuse.txt',header=None, delimiter = ';').to_numpy()
 AHN_max = pd.read_csv('AHN_max.txt', header = None, delimiter = ';').to_numpy()
 AHN_gem = pd.read_csv('AHN_avg.txt', header = None, delimiter = ';').to_numpy()
 
@@ -91,7 +86,6 @@ cb = fig.colorbar(p1,spacing='uniform')
 ax.axis('scaled')
 ax.set_xlabel('x (100m)')
 ax.set_ylabel('y (100m)')
-fig.savefig(output_dir / 'land_use_classes.png', bbox_inches='tight')
 
 # Plot the maximum elevation
 fig,ax = plt.subplots()
@@ -101,7 +95,6 @@ cb = fig.colorbar(p2)
 ax.axis('scaled')
 ax.set_xlabel('x (100m)')
 ax.set_ylabel('y (100m)')
-fig.savefig(output_dir / 'maximum_elevation.png', bbox_inches='tight')
 
 # Plot the average elevation
 fig,ax = plt.subplots()
@@ -111,23 +104,21 @@ cb = fig.colorbar(p3)
 ax.axis('scaled')
 ax.set_xlabel('x (100m)')
 ax.set_ylabel('y (100m)')
-fig.savefig(output_dir / 'average_elevation.png', bbox_inches='tight')
 
 # Plot population per hectare
 fig,ax = plt.subplots()
 plt.title('Population per hectare (10log)')
 
-# Adapt to 10log scale
-inhabitants_new = np.full(inhabitants.shape, np.nan)
+#Adapt to 10logscale
+inhabitants_new = np.empty((223,983))
 for ix  in xrange:
     for iy in yrange:
         if inhabitants[ix,iy] > 0:
             inhabitants_new[ix,iy] = np.log10(inhabitants[ix,iy])
+        if inhabitants_new[ix,iy] == 0:
+            inhabitants_new[ix,iy] = np.nan
 p4 = plt.pcolor(np.flipud(inhabitants_new),cmap='hsv')
 cb = fig.colorbar(p4)
 ax.axis('scaled')
 ax.set_xlabel('x (100m)')
 ax.set_ylabel('y (100m)')
-fig.savefig(output_dir / 'population_per_hectare_log10.png', bbox_inches='tight')
-
-plt.show()
