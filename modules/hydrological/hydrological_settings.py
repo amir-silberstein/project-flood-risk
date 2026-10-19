@@ -1,5 +1,13 @@
 from global_settings import FLOOD_DURATION
 
+# Manning Roughness Defaults
+MANNING_MAIN_CHANNEL: float = 0.03
+MANNING_FLOODPLAINS: float = 0.05
+
+# Manning Roughness Variations: [min, max]
+MANNING_MAIN_CHANNEL_VARIATIONS: list[float] = [0.022, 0.06]
+MANNING_FLOODPLAINS_VARIATIONS: list[float] = [0.035, 0.15]
+
 # Breach Simulation Settings
 BREACH_TIME_STEP: float = 10.0  # seconds
 BREACH_DEVELOPMENT_TIME: float = 600.0  # seconds
@@ -17,3 +25,5 @@ BREACH_FACTOR_1: float = 1.2
 BREACH_FACTOR_2: float = 0.04
 BREACH_DOWNSTREAM_HEAD_RATIO: float = 2 / 3  # Ratio of downstream to upstream head
 BREACH_DISCHARGE_COEFFICIENT: float = 1.0
+
+

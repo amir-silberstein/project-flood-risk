@@ -1,6 +1,7 @@
 import math
 
-from breach.breach_settings import (
+from dike_settings import DikeSettings
+from modules.hydrological.hydrological_settings import (
     BREACH_TIME_STEP,
     BREACH_DEVELOPMENT_TIME,
     BREACH_SIMULATION_DURATION,
@@ -18,10 +19,9 @@ from breach.breach_settings import (
 
 def calculate_breach_discharge(
     water_level_nap: float,
-    crest_height_nap: float,
-    floodplains_bed_nap: float,
+    dike: DikeSettings,
 ) -> float:
-    """Calculate breach discharge for a given water level in NAP."""
+    """Calculate breach discharge for a given water level and dike."""
 
     breach_width = BREACH_INITIAL_WIDTH
     breach_discharge = 0.0
@@ -31,13 +31,13 @@ def calculate_breach_discharge(
         time = step * BREACH_TIME_STEP
 
         if time <= BREACH_DEVELOPMENT_TIME:
-            bed_level = crest_height_nap - (
-                crest_height_nap - floodplains_bed_nap
+            bed_level = dike.crest_height_nap - (
+                dike.crest_height_nap - dike.floodplains_bed_nap
             ) * (time / BREACH_DEVELOPMENT_TIME)
             width_growth_rate = 0.0
 
         else:
-            bed_level = floodplains_bed_nap
+            bed_level = dike.floodplains_bed_nap
             upstream_head = max(0.0, water_level_nap - bed_level)
 
             if upstream_head > 0:
