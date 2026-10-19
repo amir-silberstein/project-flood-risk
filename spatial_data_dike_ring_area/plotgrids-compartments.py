@@ -1,207 +1,188 @@
 # -*- coding: utf-8 -*-
-"""
-Data and Plotting Script — Project Flood Risk Module 5
-Includes Interactive Coordinate Picker
-"""
+"""Data and compartment plotting for Project Flood Risk Module 5."""
 
 from pathlib import Path
-import matplotlib as mpl
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import BoundaryNorm, ListedColormap
+from scipy.ndimage import label
+
 
 # ==============================================================================
-# 1. SETUP & CONFIGURATION
+# 1. SETTINGS
 # ==============================================================================
+
 try:
-    SCRIPT_DIR = Path(__file__).parent
+    SCRIPT_DIR = Path(__file__).resolve().parent
 except NameError:
     SCRIPT_DIR = Path.cwd()
 
-mpl.rcParams['savefig.dpi'] = 300
-mpl.rcParams['figure.dpi'] = 100
+GRID_SHAPE = (223, 983)
 
-yrange = np.arange(0, 223, 1)
-xrange = np.arange(0, 983, 1)
-compartment = np.zeros((223, 983))
 
-# ==============================================================================
-# 2. LOADING DATA
-# ==============================================================================
-dikeringarea = pd.read_csv(
-    SCRIPT_DIR / 'Dikeringarea.txt', header=None, delimiter=';'
-).to_numpy()
-inhabitants = pd.read_csv(
-    SCRIPT_DIR / 'Inhabitants.txt', header=None, delimiter=';'
-).to_numpy()
-landuse = pd.read_csv(
-    SCRIPT_DIR / 'landuse.txt', header=None, delimiter=';'
-).to_numpy()
-AHN_max = pd.read_csv(
-    SCRIPT_DIR / 'AHN_max.txt', header=None, delimiter=';'
-).to_numpy()
-AHN_gem = pd.read_csv(
-    SCRIPT_DIR / 'AHN_avg.txt', header=None, delimiter=';'
-).to_numpy()
-
-# ==============================================================================
-# 3. HIGH-ACCURACY ELEVATION MAP WITH INTERACTIVE CLICK PICKER
-# ==============================================================================
-fig, ax = plt.subplots(figsize=(12, 5))
-plt.title(
-    'Maximum Elevation [m+NAP] — Click Anywhere to Print Coordinates',
-    fontsize=11,
-    weight='bold',
-)
-
-# Height Calibration
-vmin_elev = float(np.floor(np.nanmin(AHN_max)))
-vmax_elev = float(np.ceil(np.nanpercentile(AHN_max, 98)))
-
-levels = np.arange(vmin_elev, vmax_elev + 0.5, 0.5)
-
-# Modern Matplotlib colormap resampling syntax
-cmap_elev = mpl.colormaps['terrain'].resampled(len(levels) - 1)
-norm_elev = mpl.colors.BoundaryNorm(levels, cmap_elev.N)
-
-# Plot array
-im = ax.imshow(
-    AHN_max,
-    cmap=cmap_elev,
-    norm=norm_elev,
-    origin='lower',
-    extent=[0, 983, 0, 223],
-    aspect='equal',
-)
-
-# Colorbar
-cb = fig.colorbar(
-    im,
-    ax=ax,
-    shrink=0.85,
-    pad=0.02,
-    ticks=np.arange(vmin_elev, vmax_elev + 1, 1),
-)
-cb.set_label('Elevation [m + NAP]', fontsize=10)
-
-# Coordinate Grid
-ax.set_xticks(np.arange(0, 984, 50))
-ax.set_xticks(np.arange(0, 984, 10), minor=True)
-ax.set_yticks(np.arange(0, 224, 25))
-ax.set_yticks(np.arange(0, 224, 5), minor=True)
-
-ax.grid(
-    True, which='major', color='black', linestyle='-', linewidth=0.5, alpha=0.6
-)
-ax.grid(
-    True, which='minor', color='gray', linestyle=':', linewidth=0.3, alpha=0.5
-)
-
-# Boundary lines
-ax.plot([150, 150], [0, 223], color='black', linewidth=1.5)
-ax.plot([400, 550], [223, 0], color='blue', linewidth=1.5)
-ax.plot([700, 800], [0, 223], color='red', linewidth=1.5)
-ax.plot([150, 345], [100, 100], color='green', linewidth=1.5)
-
-ax.set_xlabel('ix (Cell X Coordinate: 0 to 983)', fontsize=10)
-ax.set_ylabel('iy (Cell Y Coordinate: 0 to 223)', fontsize=10)
-ax.set_xlim(0, 983)
-ax.set_ylim(0, 223)
-plt.tight_layout()
-
-# --- Interactive Click Event Function ---
-clicked_marker = None
-
-def onclick(event):
-    global clicked_marker
-    if event.inaxes == ax and event.xdata is not None and event.ydata is not None:
-        ix = int(np.clip(round(event.xdata), 0, 982))
-        iy = int(np.clip(round(event.ydata), 0, 222))
-        elevation = AHN_max[iy, ix]
-
-        print(
-            f"--> Clicked Location: ix={ix}, iy={iy} | Elevation={elevation:.2f} m+NAP"
-        )
-
-        # Draw/update a small red marker where clicked
-        if clicked_marker is not None:
-            clicked_marker.remove()
-        (clicked_marker,) = ax.plot(ix, iy, 'ro', markersize=6, markeredgecolor='black')
-        fig.canvas.draw_idle()
-
-# Connect mouse click handler to canvas
-fig.canvas.mpl_connect('button_press_event', onclick)
-
-# ==============================================================================
-# 4. DIKE RING AREAS MAP
-# ==============================================================================
-fig2, ax2 = plt.subplots(figsize=(10, 4.5))
-plt.title('Dike Ring Areas', fontsize=11, weight='bold')
-
-ax2.imshow(dikeringarea, cmap='jet', origin='lower', extent=[0, 983, 0, 223])
-plt.text(150, 75, '16', fontsize=18, color='white', weight='bold')
-plt.text(550, 125, '43', fontsize=18, color='white', weight='bold')
-
-ax2.axis('scaled')
-ax2.set_xlabel('ix (100m)')
-ax2.set_ylabel('iy (100m)')
-
-# ==============================================================================
-# 5. COMPARTMENT DEFINITION & PLOTTING
-# ==============================================================================
-for iy in yrange:
-    for ix in xrange:
-        if np.isnan(dikeringarea[iy, ix]):
-            compartment[iy, ix] = np.nan
-        elif dikeringarea[iy, ix] == 43:
-            if iy > 223 * (800 - ix) / 100:
-                compartment[iy, ix] = 1
-            elif iy > 223 * (ix - 400) / 150:
-                compartment[iy, ix] = 2
-            else:
-                compartment[iy, ix] = 3
-        elif dikeringarea[iy, ix] == 16:
-            if ix > 150:
-                if iy > 100:
-                    compartment[iy, ix] = 4
-                else:
-                    compartment[iy, ix] = 5
-            else:
-                compartment[iy, ix] = 6
-
-fig3, ax3 = plt.subplots(figsize=(10, 4.5))
-plt.title('Compartments', fontsize=11, weight='bold')
-
-colors_comp = [
-    (1, 1, 1),
-    (1, 0, 0),
-    (1, 1, 0),
-    (0, 0, 1),
-    (1, 0, 1),
-    (0.3, 1, 0.2),
-    (0, 1, 1),
+BOUNDARIES = [
+    [(878, 20), (859, 117), (854, 173)],
+    [(788, 35), (791, 106), (765, 138)],
+    [(655, 50), (657, 95), (673, 122)],
+    [(489, 38), (575, 112), (584, 142)],
+    [(310, 4), (368, 74), (419, 165), (447, 219)],
+    [(244, 38), (340, 130), (419, 165)],
+    [(859, 117), (791, 106), (657, 95), (575, 112), (419, 165)],
 ]
-cmap_comp = LinearSegmentedColormap.from_list('my_list', colors_comp)
-norm_comp = mpl.colors.BoundaryNorm(range(8), cmap_comp.N)
+
+
+# ==============================================================================
+# 2. LOAD DATA
+# ==============================================================================
+
+def load_raster(filename: str) -> np.ndarray:
+    """Load a semicolon-delimited raster."""
+    return pd.read_csv(
+        SCRIPT_DIR / filename,
+        header=None,
+        delimiter=";",
+        encoding="utf-8-sig",
+    ).to_numpy(dtype=float)
+
+
+dike_ring = load_raster("Dikeringarea.txt")
+ahn_max = load_raster("AHN_max.txt")
+
+if dike_ring.shape != GRID_SHAPE or ahn_max.shape != GRID_SHAPE:
+    raise ValueError(f"Expected raster dimensions {GRID_SHAPE}")
+
+
+# ==============================================================================
+# 3. ELEVATION MAP
+# ==============================================================================
+
+fig, ax = plt.subplots(figsize=(14, 5))
+
+image = ax.imshow(
+    ahn_max,
+    cmap="terrain",
+    origin="lower",
+    extent=[0, 983, 0, 223],
+    aspect="auto",
+)
+
+fig.colorbar(image, ax=ax, label="Elevation [m + NAP]")
+ax.set(title="Maximum Elevation", xlabel="x coordinate", ylabel="y coordinate")
+fig.tight_layout()
+
+
+# ==============================================================================
+# 4. DIKE RING AREAS
+# ==============================================================================
+
+fig2, ax2 = plt.subplots(figsize=(14, 5))
+
+ax2.imshow(
+    dike_ring,
+    cmap="tab10",
+    origin="lower",
+    extent=[0, 983, 0, 223],
+    interpolation="nearest",
+    aspect="auto",
+)
+
+ax2.set(title="Dike Ring Areas", xlabel="x coordinate", ylabel="y coordinate")
+fig2.tight_layout()
+
+
+# ==============================================================================
+# 5. CREATE AND PLOT COMPARTMENTS
+# ==============================================================================
+
+y, x = np.indices(GRID_SHAPE)
+boundary_mask = np.zeros(GRID_SHAPE, dtype=bool)
+
+# Rasterize each polyline as a barrier.
+for points in BOUNDARIES:
+    for (x1, y1), (x2, y2) in zip(points[:-1], points[1:]):
+        dx, dy = x2 - x1, y2 - y1
+        length_squared = dx**2 + dy**2
+
+        t = np.clip(
+            ((x - x1) * dx + (y - y1) * dy) / length_squared,
+            0,
+            1,
+        )
+        distance = np.hypot(x - (x1 + t * dx), y - (y1 + t * dy))
+        boundary_mask |= distance < 0.75
+
+# Label connected regions separately within each dike ring.
+compartment = np.zeros(GRID_SHAPE, dtype=int)
+next_id = 1
+
+for ring_id in np.unique(dike_ring[np.isfinite(dike_ring)]):
+    ring_mask = (dike_ring == ring_id) & ~boundary_mask
+    regions, count = label(
+        ring_mask,
+        structure=np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]]),
+    )
+
+    regions[regions > 0] += next_id - 1
+    compartment[ring_mask] = regions[ring_mask]
+    next_id += count
+
+# Plot each compartment in a distinct color.
+colors = plt.get_cmap("tab20", max(next_id, 2))
+cmap = ListedColormap(["black"] + [colors(i) for i in range(next_id)])
+norm = BoundaryNorm(np.arange(-1, next_id + 1), cmap.N)
+
+plot_data = np.ma.masked_where(
+    (compartment == 0) & ~boundary_mask,
+    np.where(boundary_mask, -1, compartment),
+)
+
+fig3, ax3 = plt.subplots(figsize=(16, 6))
 
 ax3.imshow(
-    compartment,
-    cmap=cmap_comp,
-    norm=norm_comp,
-    origin='lower',
+    plot_data,
+    cmap=cmap,
+    norm=norm,
+    origin="lower",
     extent=[0, 983, 0, 223],
+    interpolation="nearest",
+    aspect="auto",
 )
 
-plt.text(825, 125, '1', fontsize=18, color='black', weight='bold')
-plt.text(575, 125, '2', fontsize=18, color='black', weight='bold')
-plt.text(400, 100, '3', fontsize=18, color='white', weight='bold')
-plt.text(300, 150, '4', fontsize=18, color='black', weight='bold')
-plt.text(200, 50, '5', fontsize=18, color='black', weight='bold')
-plt.text(75, 50, '6', fontsize=18, color='black', weight='bold')
+for points in BOUNDARIES:
+    bx, by = zip(*points)
+    ax3.plot(bx, by, color="black", linewidth=1.5, marker=".", markersize=3)
 
-ax3.axis('scaled')
-ax3.set_xlabel('ix (100m)')
-ax3.set_ylabel('iy (100m)')
+for compartment_id in range(1, next_id):
+    y, x = np.where(compartment == compartment_id)
+
+    if len(x) == 0:
+        continue
+
+    ax.text(
+        x.mean(),
+        y.mean(),
+        str(compartment_id),
+        color="white",
+        fontsize=9,
+        fontweight="bold",
+        ha="center",
+        va="center",
+        bbox=dict(
+            facecolor="black",
+            alpha=0.75,
+            boxstyle="circle,pad=0.25",
+        ),
+    )
+
+ax3.set(
+    title=f"Detected Compartments ({next_id - 1} regions)",
+    xlabel="x coordinate",
+    ylabel="y coordinate",
+    xlim=(0, 983),
+    ylim=(0, 223),
+)
+fig3.tight_layout()
 
 plt.show()

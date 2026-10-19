@@ -4,7 +4,6 @@ from dike_settings import DikeSettings
 from modules.hydrological.hydrological_settings import (
     BREACH_TIME_STEP,
     BREACH_DEVELOPMENT_TIME,
-    BREACH_SIMULATION_DURATION,
     BREACH_INITIAL_WIDTH,
     BREACH_MAXIMUM_WIDTH,
     BREACH_MAXIMUM_GROWTH_RATE,
@@ -16,6 +15,7 @@ from modules.hydrological.hydrological_settings import (
     BREACH_DISCHARGE_COEFFICIENT,
 )
 
+from global_settings import FLOOD_DURATION
 
 def calculate_breach_discharge(
     water_level_nap: float,
@@ -25,7 +25,7 @@ def calculate_breach_discharge(
 
     breach_width = BREACH_INITIAL_WIDTH
     breach_discharge = 0.0
-    num_steps = int(BREACH_SIMULATION_DURATION / BREACH_TIME_STEP) + 1
+    num_steps = int(FLOOD_DURATION / BREACH_TIME_STEP) + 1
 
     for step in range(num_steps):
         time = step * BREACH_TIME_STEP

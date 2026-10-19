@@ -11,6 +11,7 @@ class DikeSettings:
     floodplains_width: float  # meters
     discharge_fraction: float  # Fraction flowing through the main channel
     river_slope: float
+    compartment_id: int
 
 DIKE16: DikeSettings = DikeSettings(
     crest_height_nap=7.88,
@@ -20,6 +21,7 @@ DIKE16: DikeSettings = DikeSettings(
     floodplains_width=500,
     discharge_fraction=2 / 9,
     river_slope=0.00011,
+    compartment_id=6,
 )
 
 DIKE43: DikeSettings = DikeSettings(
@@ -30,4 +32,5 @@ DIKE43: DikeSettings = DikeSettings(
     floodplains_width=680,
     discharge_fraction=2 / 3,
     river_slope=0.00016,
+    compartment_id=13,
 )

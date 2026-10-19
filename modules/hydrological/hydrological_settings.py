@@ -1,5 +1,17 @@
 from global_settings import FLOOD_DURATION
 
+# Dischrge thresholds for Lobith
+Q_LOBITH_BASELINE: list[float] = [  # m^3/s
+    9738.657,
+    13634.48,
+    17474.07,
+    21308.24,
+    25141.87,
+]
+Q_LOBITH_CLIMATE_CHANGE: list[float] = [  # m^3/s
+    q * 1.4 for q in Q_LOBITH_BASELINE
+]
+
 # Manning Roughness Defaults
 MANNING_MAIN_CHANNEL: float = 0.03
 MANNING_FLOODPLAINS: float = 0.05
@@ -11,7 +23,6 @@ MANNING_FLOODPLAINS_VARIATIONS: list[float] = [0.035, 0.15]
 # Breach Simulation Settings
 BREACH_TIME_STEP: float = 10.0  # seconds
 BREACH_DEVELOPMENT_TIME: float = 600.0  # seconds
-BREACH_SIMULATION_DURATION: float = FLOOD_DURATION * 3600.0  # seconds
 
 # Breach Width
 BREACH_INITIAL_WIDTH: float = 20.0  # meters
