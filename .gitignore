@@ -19,4 +19,5 @@ env/
 spatial_data_figures/
 
 # Python files for spatial dike-ring area data
-/spatial_data_dike_ring_area/*.py
+Data_dikering_areas_expanded.py
+plotgrids-compartments.py
