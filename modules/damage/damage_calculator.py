@@ -1,12 +1,4 @@
-"""
-Core damage and casualty calculation functions.
-
-Derived from Dutch Standard Method (HIS-SS) flood damage and fatality curves.
-"""
-
-from __future__ import annotations
 import numpy as np
-import pandas as pd
 
 # Hardcoded Rise Rate: 15 cm/hour converted to meters/second
 RISE_RATE_CM_PER_HOUR: float = 15.0

@@ -1,1 +1,1 @@
-"""Dike-failure calculations for the flood-risk model."""
+"""Legacy submodel 2 package."""

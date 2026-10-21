@@ -1,7 +1,3 @@
-"""
-Damage & Casualty Table Generator.
-"""
-
 import pandas as pd
 import numpy as np
 
