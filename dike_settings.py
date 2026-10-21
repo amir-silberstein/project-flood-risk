@@ -1,6 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
-@dataclass(frozen=True)
+@dataclass
 class DikeSettings:
     """Physical and hydraulic properties of a dike."""
 
@@ -21,7 +21,16 @@ DIKE16: DikeSettings = DikeSettings(
     floodplains_width=500,
     discharge_fraction=2 / 9,
     river_slope=0.00011,
-    compartment_id=6,
+    compartment_id=1,
+)
+
+DIKE16_BERM: DikeSettings = replace(
+    DIKE16,
+)
+
+DIKE16_WIDE: DikeSettings = replace(
+    DIKE16,
+    main_channel_width=DIKE16.main_channel_width + 50,
 )
 
 DIKE43: DikeSettings = DikeSettings(
@@ -32,5 +41,14 @@ DIKE43: DikeSettings = DikeSettings(
     floodplains_width=680,
     discharge_fraction=2 / 3,
     river_slope=0.00016,
-    compartment_id=13,
+    compartment_id=6,
+)
+
+DIKE43_DRAINAGE: DikeSettings = replace(
+    DIKE43,
+)
+
+DIKE43_WIDE: DikeSettings = replace(
+    DIKE43,
+    main_channel_width=DIKE43.main_channel_width + 50,
 )
