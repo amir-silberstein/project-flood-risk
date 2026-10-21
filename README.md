@@ -16,3 +16,11 @@ The model runs in stages:
    
 5. **Risk** (`modules/risk/`)  
    Combines flood probability and consequences into risk damage and risk casualties.
+
+## Installation
+
+Install the required Python packages with:
+
+```bash
+pip install -r requirements.txt
+```
