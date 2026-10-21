@@ -2,7 +2,8 @@
 
 import numpy as np
 
-from dike_settings import DIKE16, DIKE43, DikeSettings
+from dike_settings import DIKE16, DIKE16_WIDE, DIKE43, DIKE43_WIDE, DikeSettings
+from scenario_settings import ScenarioType
 
 
 _DIKE16_WATER_LEVELS = np.array(
@@ -25,6 +26,9 @@ _DIKE16_PROBABILITIES = np.array(
         9.563e-1,
     ]
 )
+
+_DIKE16_BERM_PROBABILITIES = _DIKE16_PROBABILITIES.copy()
+_DIKE16_DRAINAGE_PROBABILITIES = _DIKE16_PROBABILITIES.copy()
 
 _DIKE43_WATER_LEVELS = np.array(
     [
@@ -54,19 +58,63 @@ _DIKE43_PROBABILITIES = np.array(
     ]
 )
 
+_DIKE43_BERM_PROBABILITIES = np.array(
+    [
+        1.5828e-3, 4.5925e-3, 1.12884e-2, 2.41184e-2, 4.57603e-2,
+        7.84903e-2, 1.235526e-1, 1.807626e-1, 2.484677e-1, 2.854066e-1,
+        3.238458e-1, 3.633336e-1, 4.03412e-1, 4.436333e-1, 4.835734e-1,
+        5.228432e-1, 5.760456e-1,
+    ]
+)
+# Placeholder until the drainage piping probabilities are available.
+_DIKE43_DRAINAGE_PROBABILITIES = _DIKE43_PROBABILITIES.copy()
+
 
 def calculate_piping_probability(
     water_level_nap: float,
     dike: DikeSettings,
+    scenario_type: ScenarioType = ScenarioType.BASELINE,
 ) -> float:
     """Return the interpolated piping failure probability."""
-    
-    if dike is DIKE16:
+
+    is_dike16 = (
+        scenario_type
+        in (ScenarioType.BERM_DIKE16, ScenarioType.DRAINAGE_DIKE16,
+            ScenarioType.WIDE_RIVER_DIKE16)
+        or dike is DIKE16
+        or dike is DIKE16_WIDE
+    )
+    is_dike43 = (
+        scenario_type
+        in (ScenarioType.BERM_DIKE43, ScenarioType.DRAINAGE_DIKE43,
+            ScenarioType.WIDE_RIVER_DIKE43)
+        or dike is DIKE43
+        or dike is DIKE43_WIDE
+    )
+    if is_dike16:
         water_levels = _DIKE16_WATER_LEVELS
-        probabilities = _DIKE16_PROBABILITIES
-    elif dike is DIKE43:
+        probabilities = (
+            _DIKE16_BERM_PROBABILITIES
+            if scenario_type is ScenarioType.BERM_DIKE16
+            else (
+                _DIKE16_DRAINAGE_PROBABILITIES
+                if scenario_type is ScenarioType.DRAINAGE_DIKE16
+                else _DIKE16_PROBABILITIES
+            )
+        )
+    elif is_dike43:
         water_levels = _DIKE43_WATER_LEVELS
-        probabilities = _DIKE43_PROBABILITIES
+        probabilities = (
+            _DIKE43_BERM_PROBABILITIES
+            if scenario_type is ScenarioType.BERM_DIKE43
+            else (
+                _DIKE43_DRAINAGE_PROBABILITIES
+                if scenario_type is ScenarioType.DRAINAGE_DIKE43
+                else _DIKE43_PROBABILITIES
+            )
+        )
+    else:
+        raise ValueError(f"Unknown dike configuration: {dike!r}")
 
     return float(
         np.interp(

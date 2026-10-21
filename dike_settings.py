@@ -24,10 +24,6 @@ DIKE16: DikeSettings = DikeSettings(
     compartment_id=1,
 )
 
-DIKE16_BERM: DikeSettings = replace(
-    DIKE16,
-)
-
 DIKE16_WIDE: DikeSettings = replace(
     DIKE16,
     main_channel_width=DIKE16.main_channel_width + 50,
@@ -42,10 +38,6 @@ DIKE43: DikeSettings = DikeSettings(
     discharge_fraction=2 / 3,
     river_slope=0.00016,
     compartment_id=6,
-)
-
-DIKE43_DRAINAGE: DikeSettings = replace(
-    DIKE43,
 )
 
 DIKE43_WIDE: DikeSettings = replace(

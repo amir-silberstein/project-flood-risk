@@ -8,6 +8,7 @@ from modules.dike.macro_stability import (
 )
 from modules.dike.overtopping import calculate_overtopping_failure
 from modules.dike.piping import calculate_piping_probability
+from scenario_settings import ScenarioType
 
 
 RETURN_PERIOD_COLUMN = "return period [years]"
@@ -21,6 +22,7 @@ OVERTOPPING_PROBABILITY_COLUMN = "probability of overtopping failure"
 def create_dike_failure_table(
     hydrological_table: pd.DataFrame,
     dike: DikeSettings,
+    scenario_type: ScenarioType = ScenarioType.BASELINE,
 ) -> pd.DataFrame:
     """Create combined dike-failure probabilities for each return period."""
 
@@ -35,9 +37,17 @@ def create_dike_failure_table(
         water_level: float = float(row[WATER_LEVEL_COLUMN])
 
         macro_stability_probability: float = (
-            calculate_macro_stability_probability(water_level, dike)
+            calculate_macro_stability_probability(
+                water_level,
+                dike,
+                scenario_type,
+            )
         )
-        piping_probability: float = calculate_piping_probability(water_level, dike)
+        piping_probability: float = calculate_piping_probability(
+            water_level,
+            dike,
+            scenario_type,
+        )
         overtopping_probability: float = calculate_overtopping_failure(
             water_level,
             dike,

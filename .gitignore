@@ -5,7 +5,7 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
-test.py
+temp*.py
 
 # Virtual environments
 .venv/
@@ -15,9 +15,8 @@ env/
 # Local editor settings
 .vscode/
 
-# Generated spatial figures
-spatial_data_figures/
-
 # Python files for spatial dike-ring area data
-Data_dikering_areas_expanded.py
-plotgrids-compartments.py
+spatial_area_modules/
+
+# Temporary files
+outputs/

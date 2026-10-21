@@ -81,6 +81,7 @@ def _compartment_elevations(
 def _spill_water(
     volumes_m3: dict[int, float],
     elevations: dict[int, np.ndarray],
+    compartment_borders: dict[tuple[int, int], float],
 ) -> None:
     """Keep spilling water until every reached border has been processed."""
     water_moved = True
@@ -100,13 +101,13 @@ def _spill_water(
                 target_id
                 for target_id in COMPARTMENT_CONNECTIONS[source_id]
                 if surfaces_m[source_id]
-                >= COMPARTMENT_BORDERS[(source_id, target_id)]
+                >= compartment_borders[(source_id, target_id)]
             ]
             if not reached:
                 continue
 
             lowest_border_m = min(
-                COMPARTMENT_BORDERS[(source_id, target_id)]
+                compartment_borders[(source_id, target_id)]
                 for target_id in reached
             )
             volume_at_border_m3 = _water_volume(
@@ -141,6 +142,7 @@ def create_inundation_table(
     hydrological_table: pd.DataFrame,
     dike: DikeSettings,
     data_directory: str | Path = DATA_DIRECTORY,
+    compartment_borders: dict[tuple[int, int], float] = COMPARTMENT_BORDERS,
 ) -> pd.DataFrame:
     """Create one cell-map DataFrame for every return period."""
     dike_ring, elevations_m, land_use, population = _read_input_rasters(
@@ -157,7 +159,7 @@ def create_inundation_table(
 
         volumes_m3 = {compartment_id: 0.0 for compartment_id in COMPARTMENT_IDS}
         volumes_m3[dike.compartment_id] = total_volume_m3
-        _spill_water(volumes_m3, elevations)
+        _spill_water(volumes_m3, elevations, compartment_borders)
 
         water_surfaces_m = {
             compartment_id: _water_surface(
