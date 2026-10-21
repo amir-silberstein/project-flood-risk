@@ -17,3 +17,6 @@ env/
 
 # Generated spatial figures
 spatial_data_figures/
+
+# Python files for spatial dike-ring area data
+/spatial_data_dike_ring_area/*.py
